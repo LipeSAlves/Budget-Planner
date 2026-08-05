@@ -1,13 +1,41 @@
 package com.santander.bootcamp.budget_planner.domain.model;
 
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+
+import java.time.Instant;
+
+////@Entity
+//@Table(name = "expenses")
+//@Getter
+//@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Expense {
-    private final ExpenseId id;
 
-    public Expense(ExpenseId id) {
-        this.id = id;
-    }
+    @Id
+    private ExpenseId id;
 
-    public ExpenseId getId() {
-        return id;
+    @Enumerated(EnumType.STRING)
+    private ExpenseCategory category;
+
+    @Embedded
+    private Money money;
+
+    private Instant occurredAt;
+
+    private String note;
+
+    private Instant createdAt;
+
+    public static Expense create(ExpenseCategory category, Money money, Instant occurredAt, String note) {
+        Expense expense = new Expense();
+        expense.id = ExpenseId.newId();
+        expense.category = category;
+        expense.money = money;
+        expense.occurredAt = occurredAt != null ? occurredAt : Instant.now();
+        expense.note = note;
+        expense.createdAt = Instant.now();
+        return expense;
     }
 }
