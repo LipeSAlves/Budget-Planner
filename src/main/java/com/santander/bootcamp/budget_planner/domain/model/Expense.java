@@ -38,18 +38,18 @@ public class Expense {
     private Instant occurredAt;
 
     @Column(columnDefinition = "TEXT")
-    private String note;
+    private String description;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    public static Expense create(ExpenseCategory category, Money money, Instant occurredAt, String note) {
+    public static Expense create(ExpenseCategory category, Money money, Instant occurredAt, String description) {
         Expense expense = new Expense();
         expense.id = ExpenseId.newId();
         expense.category = category;
         expense.money = money;
         expense.occurredAt = occurredAt;
-        expense.note = note;
+        expense.description = description;
         expense.createdAt = Instant.now();
         return expense;
     }
