@@ -1,11 +1,16 @@
 package com.santander.bootcamp.budget_planner.domain.model;
 
-import jakarta.persistence.Embedded;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 import java.math.BigDecimal;
 import java.util.Objects;
 
-public record Money(BigDecimal amount, String currency) {
+@Embeddable
+public record Money(
+        @Column(nullable = false, precision = 19, scale = 2) BigDecimal amount,
+        @Column(nullable = false, length = 3) String currency
+) {
 
     public Money {
         Objects.requireNonNull(amount, "a specified amount is required");
