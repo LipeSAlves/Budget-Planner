@@ -32,6 +32,9 @@ class ExpenseRegistrationServiceTest {
     @Mock
     private ExpenseRepository expenseRepository;
 
+    @Mock
+    private TextToSpeechService textToSpeechService;
+
     @InjectMocks
     private ExpenseRegistrationService expenseRegistrationService;
 
@@ -51,6 +54,8 @@ class ExpenseRegistrationServiceTest {
                 .thenReturn(parsedExpense);
         when(expenseRepository.save(any(Expense.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(textToSpeechService.synthesizeSpeech("Gasto registrado: 45 reais e 90 centavos na categoria restaurante."))
+                .thenReturn(new byte[]{9, 8, 7});
 
         ExpenseRegistrationResult result = expenseRegistrationService.registerFromAudio(
                 audioContent,
@@ -62,6 +67,9 @@ class ExpenseRegistrationServiceTest {
         assertThat(result.expense().getMoney().amount()).isEqualByComparingTo("45.90");
         assertThat(result.expense().getOccurredAt()).isEqualTo(Instant.parse("2026-08-05T14:00:00Z"));
         assertThat(result.expense().getDescription()).isEqualTo(transcription);
+        assertThat(result.confirmationMessage())
+                .isEqualTo("Gasto registrado: 45 reais e 90 centavos na categoria restaurante.");
+        assertThat(result.confirmationAudio()).containsExactly(9, 8, 7);
 
         ArgumentCaptor<Expense> expenseCaptor = ArgumentCaptor.forClass(Expense.class);
         verify(expenseRepository).save(expenseCaptor.capture());
@@ -87,6 +95,8 @@ class ExpenseRegistrationServiceTest {
                 .thenReturn(parsedExpense);
         when(expenseRepository.save(any(Expense.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(textToSpeechService.synthesizeSpeech("Gasto registrado: 32 reais na categoria farmácia."))
+                .thenReturn(new byte[]{1});
 
         ExpenseRegistrationResult result = expenseRegistrationService.registerFromAudio(
                 audioContent,
@@ -95,5 +105,7 @@ class ExpenseRegistrationServiceTest {
 
         assertThat(result.expense().getOccurredAt()).isNull();
         assertThat(result.expense().getCategory()).isEqualTo(ExpenseCategory.PHARMACY);
+        assertThat(result.confirmationMessage()).isEqualTo("Gasto registrado: 32 reais na categoria farmácia.");
+        assertThat(result.confirmationAudio()).containsExactly(1);
     }
 }
