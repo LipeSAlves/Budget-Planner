@@ -1,7 +1,7 @@
 package com.santander.bootcamp.budget_planner.presentation;
 
-import com.santander.bootcamp.budget_planner.application.TranscriptionService;
-import com.santander.bootcamp.budget_planner.presentation.dto.TranscriptionResponse;
+import com.santander.bootcamp.budget_planner.application.ExpenseRegistrationService;
+import com.santander.bootcamp.budget_planner.presentation.dto.ExpenseRegistrationResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,20 +16,20 @@ import java.io.IOException;
 @RequestMapping("/api/transcription")
 public class TranscriptionController {
 
-    private final TranscriptionService transcriptionService;
+    private final ExpenseRegistrationService expenseRegistrationService;
 
-    public TranscriptionController(TranscriptionService transcriptionService) {
-        this.transcriptionService = transcriptionService;
+    public TranscriptionController(ExpenseRegistrationService expenseRegistrationService) {
+        this.expenseRegistrationService = expenseRegistrationService;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<TranscriptionResponse> transcribe(@RequestPart("audio") MultipartFile audio)
+    public ResponseEntity<ExpenseRegistrationResponse> transcribe(@RequestPart("audio") MultipartFile audio)
             throws IOException {
-        String transcription = transcriptionService.transcribeExpenseAudio(
+        var result = expenseRegistrationService.registerFromAudio(
                 audio.getBytes(),
                 audio.getOriginalFilename()
         );
 
-        return ResponseEntity.ok(new TranscriptionResponse(transcription));
+        return ResponseEntity.ok(ExpenseRegistrationResponse.from(result));
     }
 }
