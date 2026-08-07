@@ -6,6 +6,7 @@ import com.santander.bootcamp.budget_planner.domain.model.ParsedExpense;
 import com.santander.bootcamp.budget_planner.domain.port.AudioTranscriber;
 import com.santander.bootcamp.budget_planner.domain.port.ExpenseParser;
 import com.santander.bootcamp.budget_planner.domain.port.ExpenseRepository;
+import com.santander.bootcamp.budget_planner.domain.port.SpeechSynthesizer;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,8 @@ class ExpenseRegistrationServiceIT {
         assertThat(result.expense().getMoney().amount()).isEqualByComparingTo("80.00");
         assertThat(result.expense().getDescription()).isEqualTo("Gastei 80 reais no mercado");
         assertThat(result.expense().getOccurredAt()).isNull();
+        assertThat(result.confirmationMessage()).isEqualTo("Gasto registrado: 80 reais na categoria mercado.");
+        assertThat(result.confirmationAudio()).isNotEmpty();
 
         assertThat(expenseRepository.findById(result.expense().getId()))
                 .isPresent()
@@ -83,6 +86,15 @@ class ExpenseRegistrationServiceIT {
                             null
                     ));
             return expenseParser;
+        }
+
+        @Bean
+        @Primary
+        SpeechSynthesizer speechSynthesizer() {
+            SpeechSynthesizer speechSynthesizer = mock(SpeechSynthesizer.class);
+            when(speechSynthesizer.synthesize(anyString()))
+                    .thenReturn(new byte[]{1, 2, 3});
+            return speechSynthesizer;
         }
     }
 }

@@ -11,15 +11,18 @@ public class ExpenseRegistrationService {
     private final TranscriptionService transcriptionService;
     private final ExpenseExtractionService expenseExtractionService;
     private final ExpenseRepository expenseRepository;
+    private final TextToSpeechService textToSpeechService;
 
     public ExpenseRegistrationService(
             TranscriptionService transcriptionService,
             ExpenseExtractionService expenseExtractionService,
-            ExpenseRepository expenseRepository
+            ExpenseRepository expenseRepository,
+            TextToSpeechService textToSpeechService
     ) {
         this.transcriptionService = transcriptionService;
         this.expenseExtractionService = expenseExtractionService;
         this.expenseRepository = expenseRepository;
+        this.textToSpeechService = textToSpeechService;
     }
 
     public ExpenseRegistrationResult registerFromAudio(byte[] audioContent, String filename) {
@@ -34,7 +37,14 @@ public class ExpenseRegistrationService {
         );
 
         Expense savedExpense = expenseRepository.save(expense);
+        String confirmationMessage = ExpenseConfirmationMessageFormatter.format(savedExpense);
+        byte[] confirmationAudio = textToSpeechService.synthesizeSpeech(confirmationMessage);
 
-        return new ExpenseRegistrationResult(transcription, savedExpense);
+        return new ExpenseRegistrationResult(
+                transcription,
+                savedExpense,
+                confirmationMessage,
+                confirmationAudio
+        );
     }
 }
