@@ -54,7 +54,9 @@ class ExpenseRegistrationServiceIT {
         assertThat(result.expense().getMoney().amount()).isEqualByComparingTo("80.00");
         assertThat(result.expense().getDescription()).isEqualTo("Gastei 80 reais no mercado");
         assertThat(result.expense().getOccurredAt()).isNull();
-        assertThat(result.confirmationMessage()).isEqualTo("Gasto registrado: 80 reais na categoria mercado.");
+        assertThat(result.confirmationMessage())
+                .startsWith("Gasto registrado: 80 reais na categoria mercado, incluído no mês de ")
+                .endsWith(".");
         assertThat(result.confirmationAudio()).isNotEmpty();
 
         assertThat(expenseRepository.findById(result.expense().getId()))
