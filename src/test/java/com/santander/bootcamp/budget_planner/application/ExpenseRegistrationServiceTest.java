@@ -54,7 +54,7 @@ class ExpenseRegistrationServiceTest {
                 .thenReturn(parsedExpense);
         when(expenseRepository.save(any(Expense.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(textToSpeechService.synthesizeSpeech("Gasto registrado: 45 reais e 90 centavos na categoria restaurante."))
+        when(textToSpeechService.synthesizeSpeech("Gasto registrado: 45 reais e 90 centavos na categoria restaurante, incluído no mês de agosto."))
                 .thenReturn(new byte[]{9, 8, 7});
 
         ExpenseRegistrationResult result = expenseRegistrationService.registerFromAudio(
@@ -68,7 +68,7 @@ class ExpenseRegistrationServiceTest {
         assertThat(result.expense().getOccurredAt()).isEqualTo(Instant.parse("2026-08-05T14:00:00Z"));
         assertThat(result.expense().getDescription()).isEqualTo(transcription);
         assertThat(result.confirmationMessage())
-                .isEqualTo("Gasto registrado: 45 reais e 90 centavos na categoria restaurante.");
+                .isEqualTo("Gasto registrado: 45 reais e 90 centavos na categoria restaurante, incluído no mês de agosto.");
         assertThat(result.confirmationAudio()).containsExactly(9, 8, 7);
 
         ArgumentCaptor<Expense> expenseCaptor = ArgumentCaptor.forClass(Expense.class);
@@ -95,7 +95,7 @@ class ExpenseRegistrationServiceTest {
                 .thenReturn(parsedExpense);
         when(expenseRepository.save(any(Expense.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(textToSpeechService.synthesizeSpeech("Gasto registrado: 32 reais na categoria farmácia."))
+        when(textToSpeechService.synthesizeSpeech(org.mockito.ArgumentMatchers.contains("Gasto registrado: 32 reais na categoria farmácia, incluído no mês de")))
                 .thenReturn(new byte[]{1});
 
         ExpenseRegistrationResult result = expenseRegistrationService.registerFromAudio(
@@ -105,7 +105,9 @@ class ExpenseRegistrationServiceTest {
 
         assertThat(result.expense().getOccurredAt()).isNull();
         assertThat(result.expense().getCategory()).isEqualTo(ExpenseCategory.PHARMACY);
-        assertThat(result.confirmationMessage()).isEqualTo("Gasto registrado: 32 reais na categoria farmácia.");
+        assertThat(result.confirmationMessage())
+                .startsWith("Gasto registrado: 32 reais na categoria farmácia, incluído no mês de ")
+                .endsWith(".");
         assertThat(result.confirmationAudio()).containsExactly(1);
     }
 }
