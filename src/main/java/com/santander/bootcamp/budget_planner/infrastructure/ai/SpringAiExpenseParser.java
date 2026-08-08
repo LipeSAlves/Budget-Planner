@@ -39,9 +39,7 @@ public class SpringAiExpenseParser implements ExpenseParser {
 
     private String buildPrompt(String transcription) {
         LocalDate referenceDate = LocalDate.now(BRAZIL_ZONE);
-        String categories = String.join(", ", java.util.Arrays.stream(ExpenseCategory.values())
-                .map(Enum::name)
-                .toList());
+        String categories = ExpenseCategory.joinedNames();
 
         return """
                 You extract expense data from Brazilian Portuguese transcriptions.
@@ -51,6 +49,7 @@ public class SpringAiExpenseParser implements ExpenseParser {
 
                 Reply ONLY with valid JSON, without markdown:
                 {"amount": <number>, "category": "<CATEGORY>", "occurredAt": "<ISO-8601 instant in UTC or null>"}
+                 If you believe the user is trying to make a question about their expenses instead, say the following: 'Me desculpe se estiver interpretando errado, mas você está tentando consultar suas despesas? Se sim, use o canal apropriado para consultas; esse canal é destinado apenas para registrar despesas. Caso contrário, poderia tentar descrever sua despesa novamente?
 
                 Rules:
                 - amount: expense value in BRL as a decimal number without currency symbol

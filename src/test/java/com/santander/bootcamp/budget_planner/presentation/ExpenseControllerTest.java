@@ -1,5 +1,7 @@
 package com.santander.bootcamp.budget_planner.presentation;
 
+import com.santander.bootcamp.budget_planner.application.ExpenseQueryAgentResult;
+import com.santander.bootcamp.budget_planner.application.ExpenseQueryAgentService;
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryResult;
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryService;
 import com.santander.bootcamp.budget_planner.application.ExpenseRegistrationService;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -19,8 +22,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,6 +39,9 @@ class ExpenseControllerTest {
 
     @Mock
     private ExpenseQueryService expenseQueryService;
+
+    @Mock
+    private ExpenseQueryAgentService expenseQueryAgentService;
 
     @InjectMocks
     private ExpenseController expenseController;
@@ -81,5 +91,26 @@ class ExpenseControllerTest {
                 .andExpect(jsonPath("$.categoryFilter").isEmpty())
                 .andExpect(jsonPath("$.expenses").isEmpty())
                 .andExpect(jsonPath("$.totalAmount").value(0));
+    }
+
+    @Test
+    void shouldQueryExpensesFromAudio() throws Exception {
+        when(expenseQueryAgentService.queryFromAudio(any(byte[].class), eq("recording.m4a")))
+                .thenReturn(new ExpenseQueryAgentResult(
+                        "Quanto gastei em restaurante em julho?",
+                        "Você gastou 45 reais em restaurante em julho de 2026.",
+                        new byte[]{1, 2, 3}
+                ));
+
+        mockMvc.perform(multipart("/api/expenses/query")
+                        .file(new MockMultipartFile(
+                                "audio",
+                                "recording.m4a",
+                                "audio/m4a",
+                                new byte[]{1, 2, 3}
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "audio/mpeg"))
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"expense-query.mp3\""));
     }
 }

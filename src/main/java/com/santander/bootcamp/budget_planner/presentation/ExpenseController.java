@@ -1,5 +1,6 @@
 package com.santander.bootcamp.budget_planner.presentation;
 
+import com.santander.bootcamp.budget_planner.application.ExpenseQueryAgentService;
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryService;
 import com.santander.bootcamp.budget_planner.application.ExpenseRegistrationService;
 import com.santander.bootcamp.budget_planner.domain.model.ExpenseCategory;
@@ -23,13 +24,16 @@ public class ExpenseController {
 
     private final ExpenseRegistrationService expenseRegistrationService;
     private final ExpenseQueryService expenseQueryService;
+    private final ExpenseQueryAgentService expenseQueryAgentService;
 
     public ExpenseController(
             ExpenseRegistrationService expenseRegistrationService,
-            ExpenseQueryService expenseQueryService
+            ExpenseQueryService expenseQueryService,
+            ExpenseQueryAgentService expenseQueryAgentService
     ) {
         this.expenseRegistrationService = expenseRegistrationService;
         this.expenseQueryService = expenseQueryService;
+        this.expenseQueryAgentService = expenseQueryAgentService;
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -43,6 +47,19 @@ public class ExpenseController {
                 : expenseQueryService.findByMonthAndCategory(year, month, category);
 
         return ResponseEntity.ok(ExpenseQueryResponse.from(result));
+    }
+
+    @PostMapping(path = "/query", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")
+    public ResponseEntity<byte[]> queryFromAudio(@RequestPart("audio") MultipartFile audio) throws IOException {
+        var result = expenseQueryAgentService.queryFromAudio(
+                audio.getBytes(),
+                audio.getOriginalFilename()
+        );
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("audio/mpeg"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"expense-query.mp3\"")
+                .body(result.answerAudio());
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")
