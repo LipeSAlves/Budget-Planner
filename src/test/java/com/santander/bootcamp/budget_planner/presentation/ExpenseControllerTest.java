@@ -213,6 +213,22 @@ class ExpenseControllerTest {
     }
 
     @Test
+    void shouldRejectUpdateWithInvalidCurrency() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(put("/api/expenses/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "category": "OTHER",
+                                  "amount": 10.00,
+                                  "currency": "EXTRA"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldDeleteExpense() throws Exception {
         UUID id = UUID.randomUUID();
 
