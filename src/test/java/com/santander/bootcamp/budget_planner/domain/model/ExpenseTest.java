@@ -71,4 +71,27 @@ class ExpenseTest {
         assertThat(secondExpense.getId()).isNotNull();
         assertThat(firstExpense.getId()).isNotEqualTo(secondExpense.getId());
     }
+
+    @Test
+    void shouldUpdateExpenseFields() {
+        Expense expense = Expense.create(
+                ExpenseCategory.RESTAURANT,
+                Money.brl(new BigDecimal("45.90")),
+                null,
+                "Almoço"
+        );
+        Instant newOccurredAt = Instant.parse("2026-07-15T12:00:00Z");
+
+        expense.update(
+                ExpenseCategory.GROCERIES,
+                Money.brl(new BigDecimal("80.00")),
+                newOccurredAt,
+                "Compras no mercado"
+        );
+
+        assertThat(expense.getCategory()).isEqualTo(ExpenseCategory.GROCERIES);
+        assertThat(expense.getMoney().amount()).isEqualByComparingTo("80.00");
+        assertThat(expense.getOccurredAt()).isEqualTo(newOccurredAt);
+        assertThat(expense.getDescription()).isEqualTo("Compras no mercado");
+    }
 }

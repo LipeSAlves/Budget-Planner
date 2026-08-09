@@ -15,4 +15,6 @@ public interface ExpenseRepository {
     Optional<Expense> findById(ExpenseId id);
 
     List<Expense> findByEffectiveDateBetween(Instant startInclusive, Instant endExclusive, ExpenseCategory category);
+
+    void deleteById(ExpenseId id);
 }

@@ -80,6 +80,29 @@ class ExpenseRegistrationServiceTest {
     }
 
     @Test
+    void shouldExtractAndPersistExpenseFromText() {
+        String text = "Gastei 45 reais no restaurante";
+        ParsedExpense parsedExpense = new ParsedExpense(
+                Money.brl(new BigDecimal("45.90")),
+                ExpenseCategory.RESTAURANT,
+                null
+        );
+
+        when(expenseExtractionService.extractFromTranscription(text)).thenReturn(parsedExpense);
+        when(expenseRepository.save(any(Expense.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Expense expense = expenseRegistrationService.registerFromText(text);
+
+        assertThat(expense.getCategory()).isEqualTo(ExpenseCategory.RESTAURANT);
+        assertThat(expense.getMoney().amount()).isEqualByComparingTo("45.90");
+        assertThat(expense.getDescription()).isEqualTo(text);
+
+        ArgumentCaptor<Expense> expenseCaptor = ArgumentCaptor.forClass(Expense.class);
+        verify(expenseRepository).save(expenseCaptor.capture());
+        assertThat(expenseCaptor.getValue().getDescription()).isEqualTo(text);
+    }
+
+    @Test
     void shouldPersistExpenseWithoutOccurredAtWhenNotInformed() {
         byte[] audioContent = new byte[]{1, 2, 3};
         String transcription = "Comprei remédio por 32 reais na farmácia";
