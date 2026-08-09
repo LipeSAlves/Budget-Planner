@@ -1,5 +1,6 @@
 package com.santander.bootcamp.budget_planner.infrastructure.ai;
 
+import com.santander.bootcamp.budget_planner.application.ExpenseQueryExecutionRecorder;
 import com.santander.bootcamp.budget_planner.domain.model.ExpenseCategory;
 import com.santander.bootcamp.budget_planner.domain.port.ExpenseQueryInterpreter;
 import org.springframework.ai.chat.client.ChatClient;
@@ -16,10 +17,16 @@ public class SpringAiExpenseQueryInterpreter implements ExpenseQueryInterpreter 
 
     private final ChatClient chatClient;
     private final ExpenseAiTools expenseAiTools;
+    private final ExpenseQueryExecutionRecorder executionRecorder;
 
-    public SpringAiExpenseQueryInterpreter(ChatModel chatModel, ExpenseAiTools expenseAiTools) {
+    public SpringAiExpenseQueryInterpreter(
+            ChatModel chatModel,
+            ExpenseAiTools expenseAiTools,
+            ExpenseQueryExecutionRecorder executionRecorder
+    ) {
         this.chatClient = ChatClient.builder(chatModel).build();
         this.expenseAiTools = expenseAiTools;
+        this.executionRecorder = executionRecorder;
     }
 
     @Override
@@ -27,6 +34,8 @@ public class SpringAiExpenseQueryInterpreter implements ExpenseQueryInterpreter 
         if (question == null || question.isBlank()) {
             throw new IllegalArgumentException("question must not be blank");
         }
+
+        executionRecorder.clear();
 
         String response = chatClient.prompt()
                 .system(buildSystemPrompt())

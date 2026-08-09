@@ -4,6 +4,7 @@ import com.santander.bootcamp.budget_planner.application.ExpenseManagementServic
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryAgentResult;
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryAgentService;
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryResult;
+import com.santander.bootcamp.budget_planner.application.ExpenseQueryTextResult;
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryService;
 import com.santander.bootcamp.budget_planner.application.ExpenseRegistrationService;
 import com.santander.bootcamp.budget_planner.domain.model.Expense;
@@ -127,6 +128,45 @@ class ExpenseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "audio/mpeg"))
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"expense-query.mp3\""));
+    }
+
+    @Test
+    void shouldQueryExpensesFromText() throws Exception {
+        Expense expense = Expense.create(
+                ExpenseCategory.RESTAURANT,
+                Money.brl(new BigDecimal("45.90")),
+                Instant.parse("2026-07-15T15:00:00Z"),
+                "Almoço"
+        );
+        ExpenseQueryResult queryResult = new ExpenseQueryResult(
+                2026,
+                7,
+                ExpenseCategory.RESTAURANT,
+                List.of(expense),
+                new BigDecimal("45.90")
+        );
+
+        when(expenseQueryAgentService.queryFromText("Quanto gastei em restaurante em julho?"))
+                .thenReturn(new ExpenseQueryTextResult(
+                        "Quanto gastei em restaurante em julho?",
+                        "Você gastou 45 reais em restaurante em julho de 2026.",
+                        List.of(queryResult)
+                ));
+
+        mockMvc.perform(post("/api/expenses/query")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"question": "Quanto gastei em restaurante em julho?"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.question").value("Quanto gastei em restaurante em julho?"))
+                .andExpect(jsonPath("$.answerText").value("Você gastou 45 reais em restaurante em julho de 2026."))
+                .andExpect(jsonPath("$.queries[0].year").value(2026))
+                .andExpect(jsonPath("$.queries[0].month").value(7))
+                .andExpect(jsonPath("$.queries[0].categoryFilter").value("RESTAURANT"))
+                .andExpect(jsonPath("$.queries[0].totalAmount").value(45.90))
+                .andExpect(jsonPath("$.queries[0].expenses[0].amount").value(45.90))
+                .andExpect(jsonPath("$.queries[0].expenses[0].description").value("Almoço"));
     }
 
     @Test

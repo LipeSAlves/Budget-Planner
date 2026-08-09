@@ -1,5 +1,7 @@
 package com.santander.bootcamp.budget_planner.infrastructure.ai;
 
+import com.santander.bootcamp.budget_planner.application.ExpenseQueryExecutionRecorder;
+import com.santander.bootcamp.budget_planner.application.ExpenseQueryResult;
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryService;
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryToolResult;
 import com.santander.bootcamp.budget_planner.domain.model.ExpenseCategory;
@@ -11,9 +13,14 @@ import org.springframework.stereotype.Component;
 public class ExpenseAiTools {
 
     private final ExpenseQueryService expenseQueryService;
+    private final ExpenseQueryExecutionRecorder executionRecorder;
 
-    public ExpenseAiTools(ExpenseQueryService expenseQueryService) {
+    public ExpenseAiTools(
+            ExpenseQueryService expenseQueryService,
+            ExpenseQueryExecutionRecorder executionRecorder
+    ) {
         this.expenseQueryService = expenseQueryService;
+        this.executionRecorder = executionRecorder;
     }
 
     @Tool(description = "List personal expenses filtered by calendar month and optional category")
@@ -22,8 +29,9 @@ public class ExpenseAiTools {
             @ToolParam(description = "Calendar month from 1 to 12") int month,
             @ToolParam(required = false) ExpenseCategory category
     ) {
-        return ExpenseQueryToolResult.from(
-                expenseQueryService.findByMonthAndCategory(year, month, category)
-        );
+        ExpenseQueryResult queryResult = expenseQueryService.findByMonthAndCategory(year, month, category);
+        executionRecorder.record(queryResult);
+
+        return ExpenseQueryToolResult.from(queryResult);
     }
 }
