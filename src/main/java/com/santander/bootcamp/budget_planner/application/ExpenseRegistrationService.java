@@ -28,15 +28,8 @@ public class ExpenseRegistrationService {
     public ExpenseRegistrationResult registerFromAudio(byte[] audioContent, String filename) {
         String transcription = transcriptionService.transcribeExpenseAudio(audioContent, filename);
         ParsedExpense parsedExpense = expenseExtractionService.extractFromTranscription(transcription);
+        Expense savedExpense = persistParsedExpense(transcription, parsedExpense);
 
-        Expense expense = Expense.create(
-                parsedExpense.category(),
-                parsedExpense.money(),
-                parsedExpense.occurredAt(),
-                transcription
-        );
-
-        Expense savedExpense = expenseRepository.save(expense);
         String confirmationMessage = ExpenseConfirmationMessageFormatter.format(savedExpense);
         byte[] confirmationAudio = textToSpeechService.synthesizeSpeech(confirmationMessage);
 
@@ -46,5 +39,21 @@ public class ExpenseRegistrationService {
                 confirmationMessage,
                 confirmationAudio
         );
+    }
+
+    public Expense registerFromText(String text) {
+        ParsedExpense parsedExpense = expenseExtractionService.extractFromTranscription(text);
+        return persistParsedExpense(text.strip(), parsedExpense);
+    }
+
+    private Expense persistParsedExpense(String description, ParsedExpense parsedExpense) {
+        Expense expense = Expense.create(
+                parsedExpense.category(),
+                parsedExpense.money(),
+                parsedExpense.occurredAt(),
+                description
+        );
+
+        return expenseRepository.save(expense);
     }
 }

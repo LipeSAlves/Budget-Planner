@@ -33,4 +33,9 @@ public class ExpenseRepositoryAdapter implements ExpenseRepository {
     public List<Expense> findByEffectiveDateBetween(Instant startInclusive, Instant endExclusive, ExpenseCategory category) {
         return springDataExpenseRepository.findByEffectiveDateBetween(startInclusive, endExclusive, category);
     }
+
+    @Override
+    public void deleteById(ExpenseId id) {
+        springDataExpenseRepository.deleteById(id);
+    }
 }

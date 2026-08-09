@@ -53,4 +53,11 @@ public class Expense {
         expense.createdAt = Instant.now();
         return expense;
     }
+
+    public void update(ExpenseCategory category, Money money, Instant occurredAt, String description) {
+        this.category = category;
+        this.money = money;
+        this.occurredAt = occurredAt;
+        this.description = description;
+    }
 }
