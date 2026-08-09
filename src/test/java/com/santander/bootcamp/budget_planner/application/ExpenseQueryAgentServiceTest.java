@@ -1,11 +1,18 @@
 package com.santander.bootcamp.budget_planner.application;
 
+import com.santander.bootcamp.budget_planner.domain.model.Expense;
+import com.santander.bootcamp.budget_planner.domain.model.ExpenseCategory;
+import com.santander.bootcamp.budget_planner.domain.model.Money;
 import com.santander.bootcamp.budget_planner.domain.port.ExpenseQueryInterpreter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -22,6 +29,9 @@ class ExpenseQueryAgentServiceTest {
 
     @Mock
     private TextToSpeechService textToSpeechService;
+
+    @Mock
+    private ExpenseQueryExecutionRecorder executionRecorder;
 
     @InjectMocks
     private ExpenseQueryAgentService expenseQueryAgentService;
@@ -48,17 +58,32 @@ class ExpenseQueryAgentServiceTest {
     }
 
     @Test
-    void shouldAnswerTextQuestionWithoutTranscription() {
-        String question = "Quanto gastei em julho?";
-        String answerText = "Você gastou 150 reais em julho de 2026.";
+    void shouldReturnRichQueryResultFromText() {
+        String question = "Quanto gastei em restaurante em julho?";
+        String answerText = "Você gastou 45 reais em restaurante em julho de 2026.";
+        Expense expense = Expense.create(
+                ExpenseCategory.RESTAURANT,
+                Money.brl(new BigDecimal("45.90")),
+                Instant.parse("2026-07-15T15:00:00Z"),
+                "Almoço"
+        );
+        ExpenseQueryResult queryResult = new ExpenseQueryResult(
+                2026,
+                7,
+                ExpenseCategory.RESTAURANT,
+                List.of(expense),
+                new BigDecimal("45.90")
+        );
 
         when(expenseQueryInterpreter.answer(question)).thenReturn(answerText);
-        when(textToSpeechService.synthesizeSpeech(answerText)).thenReturn(new byte[]{1});
+        when(executionRecorder.getExecutions()).thenReturn(List.of(queryResult));
 
-        ExpenseQueryAgentResult result = expenseQueryAgentService.queryFromText(question);
+        ExpenseQueryTextResult result = expenseQueryAgentService.queryFromText(question);
 
-        assertThat(result.transcription()).isEqualTo(question);
+        assertThat(result.question()).isEqualTo(question);
         assertThat(result.answerText()).isEqualTo(answerText);
-        assertThat(result.answerAudio()).containsExactly(1);
+        assertThat(result.queries()).containsExactly(queryResult);
+
+        verify(expenseQueryInterpreter).answer(question);
     }
 }

@@ -1,5 +1,6 @@
 package com.santander.bootcamp.budget_planner.infrastructure.ai;
 
+import com.santander.bootcamp.budget_planner.application.ExpenseQueryExecutionRecorder;
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryResult;
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryService;
 import com.santander.bootcamp.budget_planner.domain.model.Expense;
@@ -24,6 +25,9 @@ class ExpenseAiToolsTest {
 
     @Mock
     private ExpenseQueryService expenseQueryService;
+
+    @Mock
+    private ExpenseQueryExecutionRecorder executionRecorder;
 
     @InjectMocks
     private ExpenseAiTools expenseAiTools;
@@ -56,6 +60,7 @@ class ExpenseAiToolsTest {
         assertThat(toolResult.totalAmount()).isEqualByComparingTo("45.90");
 
         verify(expenseQueryService).findByMonthAndCategory(2026, 7, ExpenseCategory.RESTAURANT);
+        verify(executionRecorder).record(queryResult);
     }
 
     @Test

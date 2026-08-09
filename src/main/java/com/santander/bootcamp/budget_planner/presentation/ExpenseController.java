@@ -5,8 +5,10 @@ import com.santander.bootcamp.budget_planner.application.ExpenseQueryAgentServic
 import com.santander.bootcamp.budget_planner.application.ExpenseQueryService;
 import com.santander.bootcamp.budget_planner.application.ExpenseRegistrationService;
 import com.santander.bootcamp.budget_planner.domain.model.ExpenseCategory;
+import com.santander.bootcamp.budget_planner.presentation.dto.ExpenseNaturalLanguageQueryResponse;
 import com.santander.bootcamp.budget_planner.presentation.dto.ExpenseQueryResponse;
 import com.santander.bootcamp.budget_planner.presentation.dto.ExpenseResponse;
+import com.santander.bootcamp.budget_planner.presentation.dto.QueryExpenseFromTextRequest;
 import com.santander.bootcamp.budget_planner.presentation.dto.RegisterExpenseFromTextRequest;
 import com.santander.bootcamp.budget_planner.presentation.dto.UpdateExpenseRequest;
 import jakarta.validation.Valid;
@@ -61,6 +63,15 @@ public class ExpenseController {
                 : expenseQueryService.findByMonthAndCategory(year, month, category);
 
         return ResponseEntity.ok(ExpenseQueryResponse.from(result));
+    }
+
+    @PostMapping(path = "/query", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ExpenseNaturalLanguageQueryResponse> queryFromText(
+            @Valid @RequestBody QueryExpenseFromTextRequest request
+    ) {
+        var result = expenseQueryAgentService.queryFromText(request.question());
+
+        return ResponseEntity.ok(ExpenseNaturalLanguageQueryResponse.from(result));
     }
 
     @PostMapping(path = "/query", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")
